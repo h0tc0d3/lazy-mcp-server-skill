@@ -1,0 +1,62 @@
+{
+  "requestTimeout": 120000,
+  "servers": [
+    {
+      "name": "memory",
+      "description": "Persistent gingugu memory: facts, decisions, workflows, and relations in a local SQLite database.",
+      "command": ["uvx", "gingugu"],
+      "env": {
+        "MEMORY_FILE_PATH": "${HOME}/.gingugu/memory.db"
+      },
+      "tags": ["memory", "knowledge"]
+    },
+    {
+      "name": "filesystem",
+      "description": "File access within configured dependency, compiler-header, and temporary directories. Customize the example roots for this system; check list_allowed_directories before use.",
+      "command": [
+        "sh", "-c",
+        "exec npx -y @modelcontextprotocol/server-filesystem@latest \"$HOME/go/pkg\" /usr/include /usr/lib64/gcc /usr/lib64/clang \"${TMPDIR:-/tmp}\""
+      ],
+      "tags": ["files", "headers", "dependencies"]
+    },
+    {
+      "name": "fetch-server",
+      "description": "Fetch a public URL and extract Markdown, with pagination for long pages.",
+      "command": ["uvx", "mcp-server-fetch"],
+      "tags": ["web", "http"]
+    },
+    {
+      "name": "git",
+      "description": "Inspect and operate on local Git repositories. Pass an explicit repo_path; tools include reads and mutations.",
+      "command": ["uvx", "mcp-server-git"],
+      "tags": ["vcs", "git"]
+    },
+    {
+      "name": "context7",
+      "description": "Library documentation and examples. Resolve a library ID before query-docs; keep credentials out of queries.",
+      "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
+      "env": {
+        "CONTEXT7_API_KEY": "{file:~/.config/lazy-mcp/secrets/context7-api.key}"
+      },
+      "tags": ["docs", "api"]
+    },
+    {
+      "name": "cocoindex-code",
+      "description": "Fallback code search after mcpls-lsp: semantic search in an initialized CocoIndex project. Uses LAZY_MCP_PROJECT_ROOT or the daemon launch directory; run ccc init in that project first.",
+      "command": [
+        "sh", "-c",
+        "cd \"${LAZY_MCP_PROJECT_ROOT:-.}\" && exec ccc mcp"
+      ],
+      "tags": ["code-search", "semantic", "fallback"]
+    },
+    {
+      "name": "mcpls-lsp",
+      "description": "Primary code search and navigation: workspace symbols, definitions, references, diagnostics, and refactoring through installed language servers. Uses LAZY_MCP_PROJECT_ROOT or the daemon launch directory; check get_tool_support for active languages.",
+      "command": [
+        "sh", "-c",
+        "cd \"${LAZY_MCP_PROJECT_ROOT:-.}\" && exec mcpls"
+      ],
+      "tags": ["code-search", "primary", "lsp", "rust", "go", "c", "cpp"]
+    }
+  ]
+}
