@@ -11,27 +11,6 @@
       "tags": ["memory", "knowledge"]
     },
     {
-      "name": "filesystem",
-      "description": "File access within configured dependency, compiler-header, and temporary directories. Customize the example roots for this system; check list_allowed_directories before use.",
-      "command": [
-        "sh", "-c",
-        "exec npx -y @modelcontextprotocol/server-filesystem@latest \"$HOME/go/pkg\" /usr/include /usr/lib64/gcc /usr/lib64/clang \"${TMPDIR:-/tmp}\""
-      ],
-      "tags": ["files", "headers", "dependencies"]
-    },
-    {
-      "name": "fetch-server",
-      "description": "Fetch a public URL and extract Markdown, with pagination for long pages.",
-      "command": ["uvx", "mcp-server-fetch"],
-      "tags": ["web", "http"]
-    },
-    {
-      "name": "git",
-      "description": "Inspect and operate on local Git repositories. Pass an explicit repo_path; tools include reads and mutations.",
-      "command": ["uvx", "mcp-server-git"],
-      "tags": ["vcs", "git"]
-    },
-    {
       "name": "context7",
       "description": "Library documentation and examples. Resolve a library ID before query-docs; keep credentials out of queries.",
       "command": ["npx", "-y", "@upstash/context7-mcp@latest"],

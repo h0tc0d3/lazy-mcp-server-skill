@@ -1,9 +1,8 @@
 # lazy-mcp-server-skill
 
-An Agent Skill for using the seven MCP servers behind lazy-mcp. It teaches
-discovery, schema inspection, and invocation for code search, documentation,
-fetching, files, Git, and persistent memory. For code search, it prioritizes
-mcpls and uses cocoindex-code as a fallback.
+An Agent Skill for code search, library documentation, and persistent memory
+through lazy-mcp. It teaches discovery, schema inspection, and invocation,
+prioritizing mcpls for code search with cocoindex-code as a fallback.
 
 The skill follows the current server names in
 `~/.config/lazy-mcp/servers.json`. The bundled configuration corrects server
@@ -13,21 +12,23 @@ descriptions and lets both code servers start in a selected project directory.
 
 ```text
 .
-├── SKILL.md             # discovery metadata and server workflows
+├── SKILL.md             # metadata, core workflow, and reference routing
+├── references/          # detailed procedures and examples
 ├── INSTALL.md           # server installation, project setup, and checks
 ├── README.md            # skill installation and usage
-├── servers.json         # configuration with example filesystem roots
+├── servers.json         # configuration for the four supported servers
 └── rust-analyzer.toml   # Rust target and file-scanning settings
 ```
 
 The [Agent Skills format](https://agentskills.io/specification) lets tools read
 the name and description for discovery and load the procedure when needed.
-Keep `SKILL.md` with its linked installation guide when copying the skill.
+Keep `SKILL.md`, `references/`, and the linked installation guide together
+when copying the skill.
 
 ## Install
 
-Clone the repository into your tool's skills directory. For Codex and other tools
-that read `~/.agents/skills/`:
+Clone the repository into your tool's skills directory. For Codex and other
+tools that read `~/.agents/skills/`:
 
 ```bash
 mkdir -p ~/.agents/skills
@@ -35,11 +36,12 @@ git clone https://github.com/h0tc0d3/lazy-mcp-server-skill.git ~/.agents/skills/
 ```
 
 Name the containing directory `lazy-mcp-server-skill`, matching the `name` in
-the frontmatter. Keep the linked files beside `SKILL.md` when updating a copy.
+the frontmatter. Preserve `references/` and linked resources when updating
+a copy.
 
 Installing the skill does not install or register MCP servers. Follow
 [INSTALL.md](INSTALL.md) to install lazy-mcp and mcpls with Cargo, install
-cocoindex-code with uv, and prepare the other five services. Review host paths
+cocoindex-code with uv, and prepare memory and Context7. Review host paths
 before applying [servers.json](servers.json); it includes a secret-file
 reference, without the API key itself.
 
@@ -58,7 +60,7 @@ skill documentation.
 | [Gemini CLI](https://geminicli.com/docs/cli/skills/) | `.gemini/skills/`, `.agents/skills/` | `~/.gemini/skills/`, `~/.agents/skills/` |
 
 Project paths are relative to the project root. `~` means your home directory.
-The supplied server launch commands and filesystem paths target Linux; adapt
+The supplied server launch commands and paths target Linux; adapt
 them before using the server configuration on another platform.
 
 ## One copy, several tools
@@ -106,10 +108,11 @@ explain the fallback and inspect CocoIndex's `search` schema.
 ## No skill support?
 
 Copy the body of `SKILL.md`, without its YAML frontmatter, into the rules file
-your tool reads, such as `AGENTS.md` or `CLAUDE.md`. Keep `INSTALL.md`
-accessible and update its link in the copied instructions. Always-loaded rules
-use context on every turn instead of loading for MCP tasks alone.
+your tool reads, such as `AGENTS.md` or `CLAUDE.md`. Keep `references/` and
+`INSTALL.md` accessible and update their links in the copied instructions.
+Always-loaded rules use context on every turn instead of loading for MCP tasks
+alone.
 
-For a single task, attach `SKILL.md` and ask the agent to apply it with the
-configured lazy-mcp tools. Follow the checks in [INSTALL.md](INSTALL.md) in
-the environment that will run the servers.
+For a single task, attach `SKILL.md` and the relevant reference guides, then
+ask the agent to apply them with the configured lazy-mcp tools. Follow the
+checks in [INSTALL.md](INSTALL.md) in the environment that will run the servers.

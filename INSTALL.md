@@ -1,15 +1,13 @@
 # Installing the lazy-mcp servers
 
-This guide installs the seven servers in [servers.json](servers.json) and the
-lazy-mcp proxy. The file is based on the inspected user configuration, with
-home-directory variables and example filesystem roots. Configure those roots
-for your system before applying it. Installing the skill itself is covered in
-[README.md](README.md).
+This guide installs the four servers in [servers.json](servers.json) and the
+lazy-mcp proxy: mcpls-lsp, cocoindex-code, context7, and memory. Installing the
+skill itself is covered in [README.md](README.md).
 
 ## Prerequisites
 
-Use a POSIX shell on Linux for the supplied configuration. Install Git,
-Node.js with npm/npx, Rust with Cargo, and [uv](https://docs.astral.sh/uv/).
+Use a POSIX shell on Linux for the supplied configuration. Install Node.js
+with npm/npx, Rust with Cargo, and [uv](https://docs.astral.sh/uv/).
 Use current Rust and Python toolchains and a Node.js release supported by the
 latest server packages. uv can manage the Python interpreter. Check the
 binaries in the environment that launches your MCP client, since GUI
@@ -22,7 +20,6 @@ cargo --version
 uv --version
 node --version
 npm --version
-git --version
 ```
 
 Package installation and first use need network access. `uvx` and `npx -y`
@@ -68,9 +65,6 @@ downloads from MCP startup:
 
 ```bash
 uvx --upgrade gingugu --help
-uvx --upgrade mcp-server-fetch --help
-uvx --upgrade mcp-server-git --help
-npx -y --package @modelcontextprotocol/server-filesystem@latest -- node --version
 npx -y --package @upstash/context7-mcp@latest -- node --version
 ```
 
@@ -83,21 +77,15 @@ The configuration keeps these packages unpinned.
 | Server | Package / executable | Runtime |
 | --- | --- | --- |
 | `memory` | `gingugu` via `uvx` | Python managed by uv |
-| `filesystem` | `@modelcontextprotocol/server-filesystem` via `npx` | Node.js |
-| `fetch-server` | `mcp-server-fetch` via `uvx` | Python managed by uv |
-| `git` | `mcp-server-git` via `uvx` | Python managed by uv, Git |
 | `context7` | `@upstash/context7-mcp` via `npx` | Node.js, Context7 API access |
 | `cocoindex-code` | `ccc mcp` from `cocoindex-code` | uv tool environment, embedding model |
 | `mcpls-lsp` | `mcpls` | Installed language servers |
 
 The memory package is [gingugu](https://pypi.org/project/gingugu/).
-The [filesystem](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem),
-[fetch](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch),
-and [Git](https://github.com/modelcontextprotocol/servers/tree/main/src/git)
-packages are the reference MCP servers. Context7's
+Context7's
 [setup instructions](https://github.com/upstash/context7) cover API access.
 
-## Prepare paths and the Context7 secret
+## Prepare memory storage and the Context7 secret
 
 Create the memory directory and the private configuration directory:
 
@@ -105,40 +93,9 @@ Create the memory directory and the private configuration directory:
 install -d -m 700 "$HOME/.gingugu" "$HOME/.config/lazy-mcp/secrets"
 ```
 
-The filesystem roots are system-specific. `$HOME/go/pkg`, `/usr/include`,
-`/usr/lib64/gcc`, `/usr/lib64/clang`, and `/tmp` are examples from the inspected
-Linux installation. Go settings, compiler packages, architecture, and the OS
-can change their locations. Find the directories you need:
-
-| Purpose | How to find the path |
-| --- | --- |
-| Go module cache | `go env GOMODCACHE`; do not assume `$HOME/go/pkg` |
-| System C/C++ headers | Inspect the search list from `cc -E -v -x c /dev/null` |
-| GCC builtin headers | `gcc -print-file-name=include`, if GCC is installed |
-| Clang builtin headers | The `include` subdirectory of `clang -print-resource-dir` |
-| Temporary files | Use `$TMPDIR` when set; otherwise check the OS's temporary directory |
-
-Edit the filesystem server's shell command in `servers.json` to pass the
-chosen absolute paths as separate quoted arguments. Its supplied command is
-an example, not a universal allowlist. Each root must exist; validate your
-chosen roots before starting the server. For example, replace these paths:
-
-```bash
-for dir in /absolute/path/to/module-cache /absolute/path/to/headers /absolute/path/to/scratch; do
-  test -d "$dir" || printf 'Missing filesystem root: %s\n' "$dir"
-done
-```
-
-User-specific path examples use `$USER` in place of a login name, such as
-`/home/$USER`; `$HOME` also handles a home directory outside `/home`.
 The bundled memory setting uses `${HOME}` because lazy-mcp expands `${VAR}`
-in JSON `env` values. Command arrays need a shell launcher to expand `$HOME`
-or `$USER`; the filesystem launcher provides one. The secret reference uses
+in JSON `env` values. The secret reference uses
 `{file:~/.config/lazy-mcp/secrets/context7-api.key}`, whose `~` lazy-mcp expands.
-
-Do not add broad home-directory access to fix a missing path. The filesystem
-server can write within its allowlist where OS permissions permit; the
-description is not an access-control setting.
 
 The config expects a Context7 API key in
 `~/.config/lazy-mcp/secrets/context7-api.key`. Keep an existing working key.
@@ -320,10 +277,9 @@ install -m 600 servers.json "$config_dir/servers.json"
 
 The improved file corrects capability descriptions, gives both code servers a
 project-selecting launcher, normalizes command arrays, and sets a 120-second
-request timeout for startup/indexing. It keeps the seven server names and
-uses home-directory variables. Customize the filesystem example for this
-machine. There is no unsupported `cwd` config field: the two code-server
-shell launchers change directory before `exec`.
+request timeout for startup/indexing. It configures the four supported servers
+and uses home-directory variables. The two code-server shell launchers change
+directory before `exec`.
 
 Select the project before starting lazy-mcp:
 
@@ -372,7 +328,7 @@ second terminal, `lazy-mcp list-commands memory` should connect to it.
 The one-shot CLI does not connect to a stdio-only proxy. For a chosen HTTP
 endpoint, supply `--url http://127.0.0.1:PORT/mcp` on each CLI command.
 
-## Verify all seven servers
+## Verify all four servers
 
 In an MCP client, call `list_servers`, discover each server with
 `list_commands`, and inspect its input schemas with `describe_commands`.
@@ -381,7 +337,7 @@ Run each discovery on its own if one failure obscures a batch's results.
 With the HTTP CLI, discover each server and stop on a failure:
 
 ```bash
-for server in memory filesystem fetch-server git context7 mcpls-lsp cocoindex-code; do
+for server in memory context7 mcpls-lsp cocoindex-code; do
   lazy-mcp list-commands "$server" --timeout 150 || break
 done
 ```
@@ -392,9 +348,6 @@ Then exercise the following tools through `invoke_command`, or through
 | Server | Functional check | Passing result |
 | --- | --- | --- |
 | `memory` | `memory_stats` with `{}` | Parsed statistics with `ok: true` |
-| `filesystem` | `list_allowed_directories`, then write/read a unique file under `/tmp` | Expected roots and exact file content; remove the test file afterward |
-| `fetch-server` | `fetch` for a reachable public documentation page | Retrieved content, with no downstream error |
-| `git` | `git_status` with an existing repository's `repo_path` | Repository status |
 | `context7` | `resolve-library-id`, then `query-docs` for that ID | A library match and documentation |
 | `mcpls-lsp` | `get_tool_support`, `get_document_symbols`, and `workspace_symbol_search` for known code | Active language support and the expected symbol |
 | `cocoindex-code` | `search` for a behavior in the initialized project | `success: true` and relevant nonempty results |
@@ -411,6 +364,7 @@ lazy-mcp call cocoindex-code search \
 ```
 
 Check nested `isError` values and domain results as described in
-[SKILL.md](SKILL.md). Report missing executables, authentication failures, and
-indexing errors as failures. The default health probe has its own timeout;
-repeat discovery after initial setup if a cold start exceeded that probe.
+[discovery guidance](references/discovery.md). Report missing executables,
+authentication failures, and indexing errors as failures. The default health
+probe has its own timeout; repeat discovery after initial setup if a cold
+start exceeded that probe.
